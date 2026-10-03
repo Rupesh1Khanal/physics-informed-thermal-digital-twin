@@ -23,25 +23,15 @@ Instead, only a limited number of sensors may be available, and those measuremen
 
 This project investigates whether known physical laws can improve reconstruction of the complete temperature field:
 
-$$
+```math
 T(x,t)
-$$
+```
 
 from sparse measurements.
 
-The central comparison is between:
+The central comparison is between a data-driven neural network and a Physics-Informed Neural Network.
 
-$$
-\text{Data-driven Neural Network}
-$$
-
-and:
-
-$$
-\text{Physics-Informed Neural Network}
-$$
-
-The project is then extended to an inverse problem in which the thermal diffusivity is treated as an unknown trainable physical parameter.
+The project is then extended to an inverse problem in which thermal diffusivity is treated as an unknown trainable physical parameter.
 
 ---
 
@@ -49,35 +39,35 @@ The project is then extended to an inverse problem in which the thermal diffusiv
 
 The system is a one-dimensional rod governed by the transient heat equation:
 
-$$
+```math
 \frac{\partial T}{\partial t}
 =
 \alpha
 \frac{\partial^2T}{\partial x^2}
-$$
+```
 
 where:
 
-- $T(x,t)$ is temperature,
-- $x$ is spatial position,
-- $t$ is time,
-- $\alpha$ is thermal diffusivity.
+- `T(x,t)` is temperature,
+- `x` is spatial position,
+- `t` is time,
+- `α` is thermal diffusivity.
 
 The rod length is:
 
-$$
-L=1\,m
-$$
+```math
+L = 1\,m
+```
 
 with fixed-temperature boundary conditions:
 
-$$
+```math
 T(0,t)=T(1,t)=20^\circ C
-$$
+```
 
 The initial temperature distribution is a Gaussian hot spot centered at the middle of the rod:
 
-$$
+```math
 T(x,0)
 =
 20
@@ -87,15 +77,15 @@ T(x,0)
 \left(
 -\frac{(x-0.5)^2}{2(0.08)^2}
 \right)
-$$
+```
 
 The reference thermal diffusivity is:
 
-$$
+```math
 \alpha
 =
 1.0\times10^{-4}\;m^2/s
-$$
+```
 
 ---
 
@@ -103,7 +93,7 @@ $$
 
 The governing PDE is solved using the explicit Forward-Time Centered-Space (FTCS) finite-difference method:
 
-$$
+```math
 T_i^{n+1}
 =
 T_i^n
@@ -116,32 +106,33 @@ T_{i+1}^n
 +
 T_{i-1}^n
 \right)
-$$
+```
 
-with:
+where:
 
-$$
-r=
+```math
+r
+=
 \frac{\alpha\Delta t}{\Delta x^2}
-$$
+```
 
-and the explicit stability requirement:
+The explicit stability requirement is:
 
-$$
-r\leq0.5
-$$
+```math
+r \leq 0.5
+```
 
 A grid-convergence study was performed:
 
 | Grid | Center Temperature at 200 s |
 |---|---:|
-| $N_x=21$ | 49.4222 °C |
-| $N_x=41$ | 49.6384 °C |
-| $N_x=81$ | 49.6918 °C |
+| `Nx = 21` | 49.4222 °C |
+| `Nx = 41` | 49.6384 °C |
+| `Nx = 81` | 49.6918 °C |
 
 The reduction in successive differences was approximately consistent with the expected second-order spatial discretization behavior.
 
-The $N_x=81$ solution was used as the synthetic reference field.
+The `Nx = 81` solution was used as the synthetic reference field.
 
 ### Reference Temperature Field
 
@@ -153,41 +144,36 @@ The $N_x=81$ solution was used as the synthetic reference field.
 
 Five virtual sensors were placed at:
 
-$$
-x=
+```math
+x =
 0.20,\;
 0.35,\;
 0.50,\;
 0.65,\;
 0.80
-$$
+```
 
 Gaussian measurement noise was added:
 
-$$
+```math
 T_{\text{measured}}
 =
 T_{\text{true}}
 +
 \epsilon
-$$
+```
 
 where:
 
-$$
+```math
 \epsilon
 \sim
-\mathcal N(0,0.5^2)
-$$
+\mathcal{N}(0,0.5^2)
+```
 
 Approximately 5% of sensor measurements were then removed to simulate missing observations.
 
-The resulting dataset therefore contains:
-
-- sparse spatial measurements,
-- Gaussian sensor noise,
-- missing observations,
-- and a complete reference field retained only for model evaluation.
+The resulting dataset contains sparse spatial measurements, Gaussian sensor noise, missing observations, and a complete reference field retained only for model evaluation.
 
 ---
 
@@ -197,13 +183,13 @@ A fully connected neural network was trained using only the available sensor mea
 
 The model learns:
 
-$$
+```math
 (x,t)\rightarrow T
-$$
+```
 
 using the architecture:
 
-$$
+```math
 2
 \rightarrow
 64
@@ -213,24 +199,13 @@ $$
 64
 \rightarrow
 1
-$$
+```
 
 with `Tanh` activation functions.
 
-Training used:
+Training used Mean Squared Error loss, Adam optimization, an 80/20 train-validation split, learning-rate scheduling, and early stopping.
 
-- Mean Squared Error loss,
-- Adam optimization,
-- an 80/20 train-validation split,
-- learning-rate scheduling,
-- and early stopping.
-
-The baseline model has no explicit knowledge of:
-
-- the heat equation,
-- the boundary conditions,
-- the initial temperature distribution,
-- or thermal diffusivity.
+The baseline model has no explicit knowledge of the heat equation, boundary conditions, initial temperature distribution, or thermal diffusivity.
 
 ### Baseline Result
 
@@ -249,63 +224,58 @@ The PINN uses the same neural-network architecture but incorporates the governin
 
 The normalized heat-equation residual is:
 
-$$
+```math
 f(x^*,t^*)
 =
 \frac{\partial T^*}{\partial t^*}
 -
 \alpha^*
 \frac{\partial^2T^*}{\partial x^{*2}}
-$$
+```
 
 where:
 
-$$
+```math
 \alpha^*
 =
 \frac{\alpha\Delta t}{\Delta x^2}
-$$
+```
 
 For this system:
 
-$$
+```math
 \alpha^*=0.02
-$$
+```
 
 PyTorch automatic differentiation is used to calculate:
 
-$$
+```math
 \frac{\partial T}{\partial t}
-$$
+```
 
 and:
 
-$$
+```math
 \frac{\partial^2T}{\partial x^2}
-$$
+```
 
 directly from the neural network.
 
-The total loss is:
+The total training loss is:
 
-$$
-\mathcal L_{\text{total}}
+```math
+\mathcal{L}_{\text{total}}
 =
-\mathcal L_{\text{data}}
+\mathcal{L}_{\text{data}}
 +
-\mathcal L_{\text{physics}}
+\mathcal{L}_{\text{physics}}
 +
-\mathcal L_{\text{boundary}}
+\mathcal{L}_{\text{boundary}}
 +
-\mathcal L_{\text{initial}}
-$$
+\mathcal{L}_{\text{initial}}
+```
 
-The four terms enforce:
-
-- agreement with sensor measurements,
-- satisfaction of the heat equation,
-- fixed-temperature boundary conditions,
-- and the known initial temperature distribution.
+The four terms enforce agreement with sensor measurements, satisfaction of the heat equation, fixed-temperature boundary conditions, and the known initial temperature distribution.
 
 ### PINN Result
 
@@ -334,35 +304,35 @@ For this controlled matched-physics experiment, incorporating the governing phys
 
 The project was extended to an inverse problem in which thermal diffusivity was treated as unknown.
 
-Instead of optimizing $\alpha$ directly, the model learns:
+Instead of optimizing `α` directly, the model learns:
 
-$$
+```math
 \eta=\log(\alpha)
-$$
+```
 
 with:
 
-$$
+```math
 \alpha=e^\eta
-$$
+```
 
 This guarantees that the estimated diffusivity remains positive.
 
 The inverse PINN was deliberately initialized with:
 
-$$
+```math
 \alpha_{\text{initial}}
 =
 5.0\times10^{-5}\;m^2/s
-$$
+```
 
 while the hidden reference value was:
 
-$$
+```math
 \alpha_{\text{true}}
 =
 1.0\times10^{-4}\;m^2/s
-$$
+```
 
 The neural-network parameters and the physical parameter were optimized simultaneously.
 
@@ -370,17 +340,17 @@ The neural-network parameters and the physical parameter were optimized simultan
 
 The final estimate was:
 
-$$
+```math
 \alpha_{\text{estimated}}
 =
 9.928\times10^{-5}\;m^2/s
-$$
+```
 
 with a relative error of approximately:
 
-$$
+```math
 0.72\%
-$$
+```
 
 The inverse PINN simultaneously reconstructed the temperature field with:
 
@@ -433,7 +403,7 @@ In contrast, the PINN remained accurate because the governing PDE, thermal diffu
 
 The small non-monotonic difference between the one-sensor and three-sensor PINN results should not be interpreted as evidence that fewer sensors are preferable.
 
-Repeated experiments across multiple random seeds would be required to quantify these smaller differences statistically.
+Repeated experiments across multiple random seeds would be required to quantify smaller differences statistically.
 
 ---
 
@@ -447,23 +417,25 @@ Repeated experiments across multiple random seeds would be required to quantify 
 
 For the inverse problem:
 
-$$
+```math
 \alpha_{\text{true}}
 =
 1.0\times10^{-4}\;m^2/s
-$$
+```
 
-$$
+and:
+
+```math
 \alpha_{\text{estimated}}
 =
 9.928\times10^{-5}\;m^2/s
-$$
+```
 
 with approximately:
 
-$$
+```math
 0.72\%
-$$
+```
 
 relative parameter-estimation error.
 
@@ -557,66 +529,27 @@ physics_informed_thermal_digital_twin/
 
 ### `01_heat_equation_basics.ipynb`
 
-Introduces:
-
-- heat conduction,
-- Fourier's law,
-- the 1D heat equation,
-- finite-difference approximations,
-- FTCS,
-- and numerical stability.
+Introduces heat conduction, Fourier's law, the 1D heat equation, finite-difference approximations, FTCS, and numerical stability.
 
 ### `02_numerical_heat_simulation.ipynb`
 
-Implements:
-
-- the full numerical solver,
-- Gaussian initial conditions,
-- fixed-temperature boundaries,
-- transient simulation,
-- and grid-convergence analysis.
+Implements the full numerical solver, Gaussian initial conditions, fixed-temperature boundaries, transient simulation, and grid-convergence analysis.
 
 ### `03_sparse_sensor_data.ipynb`
 
-Creates:
-
-- virtual sensors,
-- noisy measurements,
-- residual analysis,
-- missing observations,
-- and the synthetic ML dataset.
+Creates virtual sensors, noisy measurements, residual analysis, missing observations, and the synthetic ML dataset.
 
 ### `04_data_driven_baseline.ipynb`
 
-Implements:
-
-- data preparation,
-- normalization,
-- a fully connected neural-network baseline,
-- model training,
-- validation,
-- and full-field reconstruction.
+Implements data preparation, normalization, a fully connected neural-network baseline, model training, validation, and full-field reconstruction.
 
 ### `05_physics_informed_model.ipynb`
 
-Implements:
-
-- normalized PDE formulation,
-- collocation points,
-- automatic differentiation,
-- physics loss,
-- boundary and initial-condition losses,
-- PINN training,
-- and comparison with the data-driven baseline.
+Implements normalized PDE formulation, collocation points, automatic differentiation, physics loss, boundary and initial-condition losses, PINN training, and comparison with the data-driven baseline.
 
 ### `06_inverse_problem_and_robustness.ipynb`
 
-Extends the project with:
-
-- inverse thermal-diffusivity estimation,
-- simultaneous state and parameter reconstruction,
-- 5-, 3-, and 1-sensor experiments,
-- and robustness analysis.
+Extends the project with inverse thermal-diffusivity estimation, simultaneous state and parameter reconstruction, 5-, 3-, and 1-sensor experiments, and robustness analysis.
 
 ---
 
@@ -654,20 +587,7 @@ The project should therefore be interpreted as a **Scientific Machine Learning a
 
 ## Possible Extensions
 
-Future work could investigate:
-
-- experimental temperature measurements,
-- heterogeneous thermal materials,
-- temperature-dependent diffusivity,
-- uncertain or time-dependent boundary conditions,
-- physics-model mismatch,
-- sensor bias and drift,
-- non-Gaussian measurement noise,
-- anomaly detection,
-- predictive maintenance,
-- uncertainty quantification,
-- repeated experiments across multiple random seeds,
-- and extension from 1D to 2D thermal systems.
+Future work could investigate experimental temperature measurements, heterogeneous thermal materials, temperature-dependent diffusivity, uncertain or time-dependent boundary conditions, physics-model mismatch, sensor bias and drift, non-Gaussian measurement noise, anomaly detection, predictive maintenance, uncertainty quantification, repeated experiments across multiple random seeds, and extension from 1D to 2D thermal systems.
 
 ---
 
@@ -694,12 +614,4 @@ The main areas explored are:
 
 Background in Physics and Data Science.
 
-Areas of interest:
-
-- Scientific Machine Learning
-- Physics-Informed Machine Learning
-- Computational Modelling
-- Scientific Computing
-- Sensor and Time-Series Analysis
-- Predictive Maintenance
-- Digital Twins
+Areas of interest include Scientific Machine Learning, Physics-Informed Machine Learning, Computational Modelling, Scientific Computing, Sensor and Time-Series Analysis, Predictive Maintenance, and Digital Twins.
